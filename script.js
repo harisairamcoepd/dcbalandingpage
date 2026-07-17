@@ -228,7 +228,7 @@
       card.className = 'success-story-card';
       card.dataset.reveal = '';
       card.style.setProperty('--story-delay', `${(index % 4) * .1}s`);
-      card.innerHTML = `<div class="success-story-media"><img src="assets/success-stories/success-story-${String(index + 1).padStart(2, '0')}.jpeg" width="574" height="578" loading="lazy" decoding="async" alt="COEPD success story: ${name} — ${outcome}" title="${name} — COEPD career success"><div class="success-story-overlay" aria-hidden="true"><span>Business Analyst</span><span>Career Success</span><span>COEPD Graduate</span></div></div><div class="success-story-copy"><h3>${name}</h3><p>${outcome}</p><a href="${demoUrl}" target="_blank" rel="noopener noreferrer" aria-label="Book a free DCBA demo">Book Free Demo <span aria-hidden="true">→</span></a></div>`;
+      card.innerHTML = `<div class="success-story-media"><img src="assets/success-stories/success-story-${String(index + 1).padStart(2, '0')}.jpeg" width="574" height="578" loading="lazy" decoding="async" alt="COEPD success story: ${name} — ${outcome}" title="${name} — COEPD career success"><div class="success-story-overlay" aria-hidden="true"><span>Business Analyst</span><span>Career Success</span><span>COEPD Graduate</span></div></div><div class="success-story-copy"><h3>${name}</h3><p>${outcome}</p></div>`;
       fragment.appendChild(card);
     });
     storyTrack.querySelector('noscript')?.remove();
