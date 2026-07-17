@@ -43,10 +43,21 @@
 
   const logoTrack = document.querySelector('[data-logo-track]');
   if (logoTrack) {
-    [...logoTrack.children].forEach(logo => {
-      const clone = logo.cloneNode(true);
+    [...logoTrack.querySelectorAll(':scope > img')].forEach(logo => {
+      const card = document.createElement('article');
+      card.className = 'partner-card';
+      card.dataset.reveal = '';
+      logo.loading = 'lazy';
+      logo.decoding = 'async';
+      const name = document.createElement('span');
+      name.textContent = logo.alt;
+      logoTrack.insertBefore(card, logo);
+      card.append(logo, name);
+    });
+    [...logoTrack.children].forEach(card => {
+      const clone = card.cloneNode(true);
       clone.setAttribute('aria-hidden', 'true');
-      clone.alt = '';
+      clone.querySelector('img').alt = '';
       logoTrack.appendChild(clone);
     });
   }
@@ -56,6 +67,40 @@
     image.loading = 'lazy';
     image.decoding = 'async';
   });
+
+  if (logoTrack && !reducedMotion) {
+    let partnerOffset = 0;
+    let partnerPaused = false;
+    let partnerDragging = false;
+    let partnerStartX = 0;
+    let partnerStartOffset = 0;
+    let previousFrame = performance.now();
+    const normalizePartnerOffset = () => {
+      const half = logoTrack.scrollWidth / 2;
+      if (half > 0 && partnerOffset <= -half) partnerOffset += half;
+      if (half > 0 && partnerOffset > 0) partnerOffset -= half;
+    };
+    const animatePartners = now => {
+      if (!partnerPaused && !partnerDragging) partnerOffset -= Math.min(now - previousFrame, 40) * .035;
+      normalizePartnerOffset();
+      logoTrack.style.transform = `translate3d(${partnerOffset}px,0,0)`;
+      previousFrame = now;
+      requestAnimationFrame(animatePartners);
+    };
+    logoTrack.closest('.logo-viewport')?.addEventListener('pointerenter', () => { partnerPaused = true; });
+    logoTrack.closest('.logo-viewport')?.addEventListener('pointerleave', () => { partnerPaused = false; partnerDragging = false; });
+    logoTrack.addEventListener('pointerdown', event => {
+      partnerDragging = true;
+      partnerStartX = event.clientX;
+      partnerStartOffset = partnerOffset;
+      logoTrack.setPointerCapture?.(event.pointerId);
+    });
+    logoTrack.addEventListener('pointermove', event => {
+      if (partnerDragging) partnerOffset = partnerStartOffset + event.clientX - partnerStartX;
+    });
+    logoTrack.addEventListener('pointerup', () => { partnerDragging = false; });
+    requestAnimationFrame(animatePartners);
+  }
 
   const heroPanel = document.querySelector('.hero-panel');
   heroPanel?.addEventListener('pointermove', event => {
