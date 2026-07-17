@@ -36,7 +36,7 @@
     menuButton?.setAttribute('aria-label', 'Open navigation');
   });
 
-  document.querySelectorAll('.timeline li, .eligibility-grid article, .audience-grid article, .project, .linkedin-card').forEach((item, index) => {
+  document.querySelectorAll('main > section:not(.hero), .footer, .timeline li, .eligibility-grid article, .audience-grid article, .project').forEach((item, index) => {
     item.dataset.reveal = '';
     item.style.transitionDelay = `${Math.min(index % 6, 5) * 55}ms`;
   });
@@ -63,6 +63,11 @@
   }
 
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  document.querySelectorAll('img').forEach(image => {
+    if (!image.title && image.alt) image.title = image.alt;
+    if (!image.hasAttribute('width') && image.closest('.partner-card')) image.width = 132;
+    if (!image.hasAttribute('height') && image.closest('.partner-card')) image.height = 58;
+  });
   document.querySelectorAll('.logo-row img').forEach(image => {
     image.loading = 'lazy';
     image.decoding = 'async';
@@ -223,7 +228,7 @@
       card.className = 'success-story-card';
       card.dataset.reveal = '';
       card.style.setProperty('--story-delay', `${(index % 4) * .1}s`);
-      card.innerHTML = `<div class="success-story-media"><img src="assets/success-stories/success-story-${String(index + 1).padStart(2, '0')}.jpeg" width="574" height="578" loading="lazy" decoding="async" alt="COEPD success story: ${name} — ${outcome}"><div class="success-story-overlay" aria-hidden="true"><span>Business Analyst</span><span>Career Success</span><span>COEPD Graduate</span></div></div><div class="success-story-copy"><h3>${name}</h3><p>${outcome}</p><a href="${demoUrl}" target="_blank" rel="noopener noreferrer" aria-label="Book a free DCBA demo">Book Free Demo <span aria-hidden="true">→</span></a></div>`;
+      card.innerHTML = `<div class="success-story-media"><img src="assets/success-stories/success-story-${String(index + 1).padStart(2, '0')}.jpeg" width="574" height="578" loading="lazy" decoding="async" alt="COEPD success story: ${name} — ${outcome}" title="${name} — COEPD career success"><div class="success-story-overlay" aria-hidden="true"><span>Business Analyst</span><span>Career Success</span><span>COEPD Graduate</span></div></div><div class="success-story-copy"><h3>${name}</h3><p>${outcome}</p><a href="${demoUrl}" target="_blank" rel="noopener noreferrer" aria-label="Book a free DCBA demo">Book Free Demo <span aria-hidden="true">→</span></a></div>`;
       fragment.appendChild(card);
     });
     storyTrack.querySelector('noscript')?.remove();

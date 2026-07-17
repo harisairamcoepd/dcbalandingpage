@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://www.coepd.com/dcba/sitemap.xml
+
