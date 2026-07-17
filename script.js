@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const demoUrl = "https://wa.me/918977943529?text=Hello%20COEPD%2C%20I%27m%20interested%20in%20the%20Diploma%20in%20Certified%20Business%20Analysis%20%28DCBA%29.%20I%20would%20like%20to%20book%20a%20free%20demo.";
+  const demoUrl = "https://wa.me/918977943529?text=Hello%20COEPD%2C%0AI%20am%20interested%20in%20the%20Diploma%20in%20Certified%20Business%20Analysis%20%28DCBA%29.%0APlease%20help%20me%20book%20a%20Free%20Demo.";
   document.querySelectorAll('a.btn[href="#contact"], a.text-link[href="#contact"]').forEach(link => {
     link.href = demoUrl;
     link.target = '_blank';
