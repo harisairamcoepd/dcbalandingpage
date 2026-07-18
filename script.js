@@ -322,6 +322,39 @@
   const modal = document.querySelector('#detail-modal');
   const dialog = modal?.querySelector('.modal-dialog');
   let modalReturnFocus = null;
+  let activeToolIndex = -1;
+  const toolCards = [...document.querySelectorAll('.tools > span')];
+  const toolDetails = [
+    {name:'JIRA',about:'JIRA is an Agile work-management platform for planning, tracking and delivering projects.',use:'Business Analysts manage requirements, user stories, acceptance criteria, sprints and defects in one shared workflow.',features:'Sprint planning • User-story tracking • Bug tracking • Requirement management',skills:'Backlog refinement • Story writing • Traceability • Agile collaboration',example:'For a digital lending project, the BA converts approved requirements into prioritised stories and tracks them through testing.',industries:'IT services • Banking • Healthcare • Retail • Telecom',benefit:'Demonstrates practical Agile delivery skills expected by enterprise teams.'},
+    {name:'Confluence',about:'Confluence is a collaborative workspace for creating, organising and sharing project knowledge.',use:'Business Analysts maintain BRDs, FRDs, meeting notes, decision logs, requirement pages and project documentation.',features:'Collaborative pages • Templates • Version history • JIRA integration',skills:'BRD • FRD • Documentation • Stakeholder collaboration • Meeting notes',example:'After a discovery workshop, the BA publishes requirements and decisions for stakeholder review and approval.',industries:'Technology • Consulting • Financial services • Healthcare',benefit:'Creates a central, searchable source of truth for stakeholders and delivery teams.'},
+    {name:'Microsoft Visio',about:'Microsoft Visio is a professional diagramming application used to visualise processes, systems and responsibilities.',use:'Analysts create AS-IS and TO-BE flows, swimlanes, UML diagrams and stakeholder-friendly process maps.',features:'Flowcharts • Swimlanes • UML • Process mapping',skills:'Process modelling • Gap analysis • Visual communication • BPMN basics',example:'A BA maps the current claims process, identifies delays and presents an improved future-state workflow.',industries:'Banking • Insurance • Manufacturing • Government • Consulting',benefit:'Makes complex business processes easier to understand, validate and improve.'},
+    {name:'Balsamiq',about:'Balsamiq is a rapid low-fidelity wireframing tool for communicating screen ideas before development.',use:'Business Analysts translate requirements into simple interfaces that stakeholders can review early.',features:'Low-fidelity wireframes • UI mockups • Reusable controls • Screen prototypes',skills:'Wireframing • User-flow thinking • Requirement visualisation • Feedback facilitation',example:'Before building a patient portal, the BA sketches registration and appointment screens for validation.',industries:'Software • E-commerce • Healthcare • Fintech • Startups',benefit:'Reduces rework by validating layout and behaviour before engineering begins.'},
+    {name:'Power BI',about:'Power BI is Microsoft’s business-intelligence platform for transforming data into reports and dashboards.',use:'Analysts build KPI views, explore trends and communicate evidence-based recommendations.',features:'Dashboard creation • Data visualisation • Business reporting • KPI tracking',skills:'Data preparation • Visual design • DAX fundamentals • Insight storytelling',example:'A retail BA combines sales data into a dashboard that highlights revenue, margin and regional performance.',industries:'Retail • Finance • Operations • Healthcare • Manufacturing',benefit:'Adds data-backed decision support to an analyst’s requirements and process expertise.'},
+    {name:'Tableau',about:'Tableau is a visual-analytics platform for exploring data and creating interactive business dashboards.',use:'Business Analysts identify patterns, compare performance and present findings to decision-makers.',features:'Interactive dashboards • Business intelligence • Data analytics • Visual exploration',skills:'Data connections • Calculated fields • Dashboard design • Insight communication',example:'A BA analyses customer churn by segment and creates an interactive view for retention planning.',industries:'Consulting • Banking • Consumer goods • Telecom • Healthcare',benefit:'Builds strong analytical storytelling capability for stakeholder presentations.'},
+    {name:'SQL',about:'SQL is the standard language used to retrieve, filter, combine and validate structured database information.',use:'Business Analysts query data to investigate requirements, validate rules and support reporting.',features:'Database queries • Data analysis • Reporting • Requirement validation',skills:'SELECT statements • Joins • Aggregation • Data-quality checks',example:'A BA verifies whether loan eligibility rules produce the expected applicant segments before UAT.',industries:'Every data-driven industry, including banking, retail, healthcare and technology',benefit:'Enables independent data investigation and more precise conversations with technical teams.'},
+    {name:'Microsoft Azure',about:'Microsoft Azure is a cloud platform providing computing, data, integration and delivery services.',use:'Business Analysts learn how enterprise solutions, cloud data and DevOps workflows fit together.',features:'Cloud services • DevOps basics • Cloud data • Enterprise solutions',skills:'Cloud concepts • Service mapping • DevOps awareness • Solution context',example:'During a migration initiative, the BA maps business needs to cloud services and documents integration dependencies.',industries:'Enterprise IT • Banking • Government • Healthcare • E-commerce',benefit:'Improves collaboration on modern cloud-transformation projects without requiring coding expertise.'},
+    {name:'Product Management',about:'Product Management coordinates customer needs, business strategy and delivery across a product lifecycle.',use:'Analysts contribute discovery, stakeholder alignment, prioritisation, roadmaps and measurable outcomes.',features:'Product lifecycle • Roadmaps • Stakeholder management • Product strategy',skills:'Discovery • Prioritisation • Roadmapping • Outcome definition',example:'A BA helps prioritise a mobile-banking roadmap using customer pain points, value and delivery effort.',industries:'Technology • SaaS • Fintech • E-commerce • Consumer products',benefit:'Develops commercial thinking and supports progression toward product-focused roles.'}
+  ];
+  toolCards.forEach((card,index) => {
+    card.dataset.toolIndex = index;
+    const cardImage = card.querySelector('img');
+    if (cardImage) cardImage.alt = `${toolDetails[index].name} logo`;
+    const more = document.createElement('small'); more.className = 'tool-more'; more.textContent = 'Learn More  →'; card.appendChild(more);
+    card.addEventListener('pointermove', event => {
+      if (reducedMotion || event.pointerType === 'touch') return;
+      const box = card.getBoundingClientRect();
+      card.style.setProperty('--rx', `${((event.clientY-box.top)/box.height-.5)*-3}deg`);
+      card.style.setProperty('--ry', `${((event.clientX-box.left)/box.width-.5)*4}deg`);
+      card.style.setProperty('--gx', `${event.clientX-box.left}px`); card.style.setProperty('--gy', `${event.clientY-box.top}px`);
+    });
+    card.addEventListener('pointerleave', () => { card.style.removeProperty('--rx'); card.style.removeProperty('--ry'); });
+    card.addEventListener('pointerdown', event => {
+      if (reducedMotion) return;
+      const box = card.getBoundingClientRect(), ripple = document.createElement('i');
+      ripple.className = 'tool-ripple'; ripple.style.left = `${event.clientX-box.left}px`; ripple.style.top = `${event.clientY-box.top}px`;
+      card.appendChild(ripple); ripple.addEventListener('animationend',()=>ripple.remove(),{once:true});
+    });
+  });
   const detailCopy = {
     audience: ['Who can join','A practical route for graduates ready to enter or re-enter professional work.', [['Eligibility','Graduation in any discipline'],['Profiles','Returners, fresh graduates and domain changers'],['Communication','Working English is required'],['Background','No coding or IT experience needed']]],
     project: ['Project experience','Turn a business scenario into clear, reviewable analyst deliverables.', [['Objective','Solve a realistic business problem'],['Deliverables','Flows, requirements, stories and test support'],['Practice','Stakeholder thinking and Agile collaboration'],['Outcome','Portfolio evidence you can discuss in interviews']]],
@@ -331,6 +364,23 @@
   };
   const openModal = (trigger, type) => {
     if (!modal) return;
+    if (type === 'tool') {
+      activeToolIndex = Number(trigger.dataset.toolIndex);
+      const tool = toolDetails[activeToolIndex];
+      const image = trigger.querySelector('img');
+      modal.classList.add('tool-modal');
+      document.querySelector('#modal-kicker').textContent = 'Core Business Analyst Tools';
+      document.querySelector('#modal-title').textContent = tool.name;
+      document.querySelector('#modal-summary').textContent = tool.about;
+      document.querySelector('#modal-visual').innerHTML = `<img src="${image.src}" alt="${tool.name} official logo">`;
+      document.querySelector('#modal-details').innerHTML = [
+        ['What is this Tool?',tool.about],['How Business Analysts Use This Tool',tool.use],['Key Features',tool.features],['Career Benefits',tool.benefit],['Skills You’ll Learn',tool.skills],['Real-World Example',tool.example],['Industries Using This Tool',tool.industries],['Where It Is Used','Projects, consulting engagements, delivery teams and enterprise transformation programmes.']
+      ].map(([label,value]) => `<div><strong>${label}</strong><span>${value}</span></div>`).join('');
+      let nav = modal.querySelector('.tool-modal-nav');
+      if (!nav) { nav = document.createElement('div'); nav.className = 'tool-modal-nav'; nav.innerHTML = '<button type="button" data-tool-prev>← Previous</button><span></span><button type="button" data-tool-next>Next →</button>'; modal.querySelector('.modal-content').appendChild(nav); }
+      nav.querySelector('span').textContent = `${activeToolIndex + 1} / ${toolDetails.length}`;
+    } else {
+      modal.classList.remove('tool-modal');
     const base = detailCopy[type];
     const title = trigger.querySelector('h3,b')?.textContent?.trim() || trigger.querySelector('img')?.alt || base[0];
     const summary = trigger.querySelector('p,small')?.textContent?.trim() || base[1];
@@ -341,17 +391,24 @@
     const visual = document.querySelector('#modal-visual');
     const image = trigger.querySelector('img');
     visual.innerHTML = image ? `<img src="${image.src}" alt="">` : `<span>${String(title).slice(0,3).toUpperCase()}</span>`;
+    }
     modalReturnFocus = trigger;
     modal.hidden = false; modal.setAttribute('aria-hidden','false'); document.body.classList.add('modal-open'); dialog?.focus();
   };
   const closeModal = () => { if (!modal || modal.hidden) return; modal.hidden = true; modal.setAttribute('aria-hidden','true'); document.body.classList.remove('modal-open'); modalReturnFocus?.focus(); };
-  const interactiveGroups = [['.audience-grid article','audience'],['.project','project'],['.tools>span','project'],['.guarantee-grid article','guarantee'],['.partner-card','partner'],['.success-story-card','story']];
+  const interactiveGroups = [['.audience-grid article','audience'],['.project','project'],['.tools>span','tool'],['.guarantee-grid article','guarantee'],['.partner-card','partner'],['.success-story-card','story']];
   interactiveGroups.forEach(([selector,type]) => document.querySelectorAll(selector).forEach(item => {
     item.tabIndex = 0; item.setAttribute('role','button'); item.setAttribute('aria-label',`View details: ${item.textContent.trim().replace(/\s+/g,' ')}`);
     item.addEventListener('click', () => openModal(item,type));
     item.addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openModal(item,type); } });
   }));
   modal?.addEventListener('click', event => { if (event.target.closest('[data-modal-close]')) closeModal(); });
+  modal?.addEventListener('click', event => {
+    const direction = event.target.closest('[data-tool-prev]') ? -1 : event.target.closest('[data-tool-next]') ? 1 : 0;
+    if (!direction || activeToolIndex < 0) return;
+    openModal(toolCards[(activeToolIndex + direction + toolCards.length) % toolCards.length], 'tool');
+    dialog?.scrollTo({top:0,behavior:reducedMotion?'auto':'smooth'});
+  });
   addEventListener('keydown', event => {
     if (event.key === 'Escape') closeModal();
     if (event.key === 'Tab' && modal && !modal.hidden) {
