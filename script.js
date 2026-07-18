@@ -426,9 +426,9 @@
   };
   document.querySelectorAll('.success-story-card').forEach(card => {
     const copy = card.querySelector('.success-story-copy');
-    if (copy && !copy.querySelector('.view-story')) { const button=document.createElement('span'); button.className='view-story'; button.textContent='View Story →'; copy.appendChild(button); }
+    if (copy && !copy.querySelector('.view-story')) { const button=document.createElement('button'); button.type='button'; button.className='view-story'; button.textContent='View Story →'; button.setAttribute('aria-label',`View ${card.querySelector('h3')?.textContent || 'learner'} success story`); copy.appendChild(button); }
   });
-  const interactiveGroups = [['#program .card','highlight'],['.feature-cloud span','curriculum'],['.audience-grid article','audience'],['.month-timeline li','journey'],['.project','project'],['.tools>span','tool'],['.commitment-grid article','guarantee'],['.guarantee-grid article','guarantee'],['.partner-card','partner'],['.success-story-card','story']];
+  const interactiveGroups = [['#program .card','highlight'],['.feature-cloud span','curriculum'],['.audience-grid article','audience'],['.month-timeline li','journey'],['.project','project'],['.tools>span','tool'],['.commitment-grid article','guarantee'],['.guarantee-grid article','guarantee'],['.partner-card','partner']];
   interactiveGroups.forEach(([selector,type]) => document.querySelectorAll(selector).forEach(item => {
     item.tabIndex = 0; item.setAttribute('role','button'); item.setAttribute('aria-label',`View details: ${item.textContent.trim().replace(/\s+/g,' ')}`);
     item.addEventListener('click', () => openModal(item,type));
@@ -440,6 +440,16 @@
       ripple.addEventListener('animationend',()=>ripple.remove(),{once:true});
     });
   }));
+  document.querySelectorAll('.success-story-card').forEach(card => {
+    card.tabIndex = 0; card.setAttribute('role','button'); card.setAttribute('aria-haspopup','dialog');
+    card.setAttribute('aria-label',`View success story: ${card.querySelector('h3')?.textContent || 'COEPD learner'}`);
+    card.addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openModal(card,'story'); } });
+  });
+  storyTrack?.addEventListener('click', event => {
+    const card = event.target.closest('.success-story-card');
+    if (!card || Math.abs((event.clientX || 0) - dragStartX) > 8) return;
+    event.preventDefault(); openModal(card,'story');
+  });
   modal?.addEventListener('click', event => { if (event.target.closest('[data-modal-close]')) closeModal(); });
   modal?.addEventListener('click', event => {
     const direction = event.target.closest('[data-tool-prev]') ? -1 : event.target.closest('[data-tool-next]') ? 1 : 0;
