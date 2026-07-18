@@ -357,6 +357,7 @@
   });
   const detailCopy = {
     audience: ['Who can join','A practical route for graduates ready to enter or re-enter professional work.', [['Eligibility','Graduation in any discipline'],['Profiles','Returners, fresh graduates and domain changers'],['Communication','Working English is required'],['Background','No coding or IT experience needed']]],
+    journey: ['Learning journey','Each month builds a distinct capability through guided practice, review and portfolio evidence.', [['Learning','Focused concepts and professional methods'],['Practice','Assignments based on workplace scenarios'],['Feedback','Mentor review and measurable progress'],['Outcome','A clear milestone toward project and interview readiness']]],
     project: ['Project experience','Turn a business scenario into clear, reviewable analyst deliverables.', [['Objective','Solve a realistic business problem'],['Deliverables','Flows, requirements, stories and test support'],['Practice','Stakeholder thinking and Agile collaboration'],['Outcome','Portfolio evidence you can discuss in interviews']]],
     guarantee: ['Career support pathway','A transparent progression from learning milestones to opportunity support.', [['Milestones','Attendance, assignments and evaluations'],['Evidence','Required capstone and live-project work'],['Readiness','Profile, mock interview and communication reviews'],['Agreement','Eligibility and terms shared before enrolment']]],
     partner: ['Employer insight','Understand the capabilities commonly expected in analyst and delivery roles.', [['Typical roles','Business, process and product analyst'],['Core skills','Requirements, Agile and stakeholder communication'],['Evidence','Clear documentation and project examples'],['Opportunity','Role availability varies by employer and location']]],
@@ -396,7 +397,7 @@
     modal.hidden = false; modal.setAttribute('aria-hidden','false'); document.body.classList.add('modal-open'); dialog?.focus();
   };
   const closeModal = () => { if (!modal || modal.hidden) return; modal.hidden = true; modal.setAttribute('aria-hidden','true'); document.body.classList.remove('modal-open'); modalReturnFocus?.focus(); };
-  const interactiveGroups = [['.audience-grid article','audience'],['.project','project'],['.tools>span','tool'],['.guarantee-grid article','guarantee'],['.partner-card','partner'],['.success-story-card','story']];
+  const interactiveGroups = [['.audience-grid article','audience'],['.month-timeline li','journey'],['.project','project'],['.tools>span','tool'],['.guarantee-grid article','guarantee'],['.partner-card','partner'],['.success-story-card','story']];
   interactiveGroups.forEach(([selector,type]) => document.querySelectorAll(selector).forEach(item => {
     item.tabIndex = 0; item.setAttribute('role','button'); item.setAttribute('aria-label',`View details: ${item.textContent.trim().replace(/\s+/g,' ')}`);
     item.addEventListener('click', () => openModal(item,type));
