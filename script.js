@@ -2,7 +2,7 @@
   'use strict';
 
   const demoUrl = "https://wa.me/918977943529?text=Hello%20COEPD%2C%0AI%20am%20interested%20in%20the%20Diploma%20in%20Certified%20Business%20Analysis%20%28DCBA%29.%0APlease%20help%20me%20book%20a%20Free%20Demo.";
-  document.querySelectorAll('a.btn[href="#contact"], a.text-link[href="#contact"]').forEach(link => {
+  document.querySelectorAll('a.text-link[href="#contact"]').forEach(link => {
     link.href = demoUrl;
     link.target = '_blank';
     link.rel = 'noopener noreferrer';
@@ -304,6 +304,64 @@
   let storyTimer = reducedMotion ? 0 : setInterval(() => goToStory(storyIndex + 1), 5200);
   storyTrack?.addEventListener('pointerenter', () => clearInterval(storyTimer));
   storyTrack?.addEventListener('pointerleave', () => { if (!reducedMotion) storyTimer = setInterval(() => goToStory(storyIndex + 1), 5200); });
+
+  const faqSearch = document.querySelector('#faq-search');
+  const faqItems = [...document.querySelectorAll('#faq details')];
+  faqSearch?.addEventListener('input', () => {
+    const query = faqSearch.value.trim().toLowerCase();
+    let matches = 0;
+    faqItems.forEach(item => {
+      const visible = !query || item.textContent.toLowerCase().includes(query);
+      item.hidden = !visible;
+      if (visible) matches += 1;
+    });
+    const empty = document.querySelector('#faq-empty');
+    if (empty) empty.hidden = matches > 0;
+  });
+
+  const modal = document.querySelector('#detail-modal');
+  const dialog = modal?.querySelector('.modal-dialog');
+  let modalReturnFocus = null;
+  const detailCopy = {
+    audience: ['Who can join','A practical route for graduates ready to enter or re-enter professional work.', [['Eligibility','Graduation in any discipline'],['Profiles','Returners, fresh graduates and domain changers'],['Communication','Working English is required'],['Background','No coding or IT experience needed']]],
+    project: ['Project experience','Turn a business scenario into clear, reviewable analyst deliverables.', [['Objective','Solve a realistic business problem'],['Deliverables','Flows, requirements, stories and test support'],['Practice','Stakeholder thinking and Agile collaboration'],['Outcome','Portfolio evidence you can discuss in interviews']]],
+    guarantee: ['Career support pathway','A transparent progression from learning milestones to opportunity support.', [['Milestones','Attendance, assignments and evaluations'],['Evidence','Required capstone and live-project work'],['Readiness','Profile, mock interview and communication reviews'],['Agreement','Eligibility and terms shared before enrolment']]],
+    partner: ['Employer insight','Understand the capabilities commonly expected in analyst and delivery roles.', [['Typical roles','Business, process and product analyst'],['Core skills','Requirements, Agile and stakeholder communication'],['Evidence','Clear documentation and project examples'],['Opportunity','Role availability varies by employer and location']]],
+    story: ['Learner outcome','Open a verified outcome card and discuss how the same preparation could apply to your profile.', [['Starting point','Each learner begins with a different background'],['Journey','Training, projects and mentor feedback'],['Proof','Interview-ready documentation and portfolio'],['Result','The published outcome shown on this card']]]
+  };
+  const openModal = (trigger, type) => {
+    if (!modal) return;
+    const base = detailCopy[type];
+    const title = trigger.querySelector('h3,b')?.textContent?.trim() || trigger.querySelector('img')?.alt || base[0];
+    const summary = trigger.querySelector('p,small')?.textContent?.trim() || base[1];
+    document.querySelector('#modal-kicker').textContent = base[0];
+    document.querySelector('#modal-title').textContent = title;
+    document.querySelector('#modal-summary').textContent = summary;
+    document.querySelector('#modal-details').innerHTML = base[2].map(([label,value]) => `<div><strong>${label}</strong><span>${value}</span></div>`).join('');
+    const visual = document.querySelector('#modal-visual');
+    const image = trigger.querySelector('img');
+    visual.innerHTML = image ? `<img src="${image.src}" alt="">` : `<span>${String(title).slice(0,3).toUpperCase()}</span>`;
+    modalReturnFocus = trigger;
+    modal.hidden = false; modal.setAttribute('aria-hidden','false'); document.body.classList.add('modal-open'); dialog?.focus();
+  };
+  const closeModal = () => { if (!modal || modal.hidden) return; modal.hidden = true; modal.setAttribute('aria-hidden','true'); document.body.classList.remove('modal-open'); modalReturnFocus?.focus(); };
+  const interactiveGroups = [['.audience-grid article','audience'],['.project','project'],['.tools>span','project'],['.guarantee-grid article','guarantee'],['.partner-card','partner'],['.success-story-card','story']];
+  interactiveGroups.forEach(([selector,type]) => document.querySelectorAll(selector).forEach(item => {
+    item.tabIndex = 0; item.setAttribute('role','button'); item.setAttribute('aria-label',`View details: ${item.textContent.trim().replace(/\s+/g,' ')}`);
+    item.addEventListener('click', () => openModal(item,type));
+    item.addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openModal(item,type); } });
+  }));
+  modal?.addEventListener('click', event => { if (event.target.closest('[data-modal-close]')) closeModal(); });
+  addEventListener('keydown', event => {
+    if (event.key === 'Escape') closeModal();
+    if (event.key === 'Tab' && modal && !modal.hidden) {
+      const focusable = [...modal.querySelectorAll('button,a[href]')];
+      if (!focusable.length) return;
+      const first = focusable[0], last = focusable.at(-1);
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+    }
+  });
 
   document.querySelector('#year').textContent = new Date().getFullYear();
 })();
