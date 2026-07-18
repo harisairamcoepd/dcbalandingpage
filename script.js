@@ -229,6 +229,7 @@
       const companyText = outcomeParts.filter(part => part !== packageText).join(' · ') || 'COEPD placement outcome';
       const card = document.createElement('article');
       card.className = 'success-story-card';
+      card.dataset.storyIndex = index;
       card.dataset.company = companyText; card.dataset.role = 'Business Analyst'; card.dataset.package = packageText;
       card.dataset.reveal = '';
       card.style.setProperty('--story-delay', `${(index % 4) * .1}s`);
@@ -440,7 +441,7 @@
   };
   document.querySelectorAll('.success-story-card').forEach(card => {
     const copy = card.querySelector('.success-story-copy');
-    if (copy && !copy.querySelector('.view-story')) { const button=document.createElement('button'); button.type='button'; button.className='view-story'; button.dataset.storyOpen=''; button.textContent='View Story →'; button.setAttribute('aria-label',`View ${card.querySelector('h3')?.textContent || 'learner'} success story`); copy.appendChild(button); }
+    if (copy && !copy.querySelector('.view-story')) { const button=document.createElement('button'); button.type='button'; button.className='view-story'; button.dataset.storyOpen=''; button.dataset.storyIndex=card.dataset.storyIndex; button.textContent='View Story →'; button.setAttribute('aria-label',`View ${card.querySelector('h3')?.textContent || 'learner'} success story`); copy.appendChild(button); }
   });
   const interactiveGroups = [['#program .card','highlight'],['.feature-cloud span','curriculum'],['.audience-grid article','audience'],['.month-timeline li','journey'],['.project','project'],['.tools>span','tool'],['.commitment-grid article','guarantee'],['.guarantee-grid article','guarantee'],['.partner-card','partner']];
   interactiveGroups.forEach(([selector,type]) => document.querySelectorAll(selector).forEach(item => {
@@ -462,11 +463,20 @@
   storyTrack?.addEventListener('click', event => {
     const card = event.target.closest('.success-story-card');
     if (!card) return;
-    const explicitButton = event.target.closest('[data-story-open]');
-    if (!explicitButton && storyWasDragged) { storyWasDragged = false; return; }
+    if (event.target.closest('[data-story-open]')) return;
+    if (storyWasDragged) { storyWasDragged = false; return; }
     storyWasDragged = false;
     event.preventDefault(); openModal(card,'story');
   });
+  document.addEventListener('click', event => {
+    const button = event.target.closest?.('[data-story-open]');
+    if (!button) return;
+    const index = Number(button.dataset.storyIndex);
+    const card = Number.isInteger(index) ? storyCards[index] : button.closest('.success-story-card');
+    if (!card) return;
+    event.preventDefault(); event.stopPropagation();
+    openModal(card,'story');
+  }, true);
   modal?.addEventListener('click', event => { if (event.target.closest('[data-modal-close]')) closeModal(); });
   modal?.addEventListener('click', event => {
     const direction = event.target.closest('[data-tool-prev]') ? -1 : event.target.closest('[data-tool-next]') ? 1 : 0;
