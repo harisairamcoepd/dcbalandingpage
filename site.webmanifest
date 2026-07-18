@@ -1,0 +1,18 @@
+{
+  "name": "COEPD Diploma in Certified Business Analysis",
+  "short_name": "COEPD DCBA",
+  "description": "COEPD's office-based Diploma in Certified Business Analysis with live projects, mentoring and career support.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#FFFFFF",
+  "theme_color": "#2B318C",
+  "icons": [
+    {
+      "src": "assets/images/coepd-logo.png",
+      "sizes": "744x290",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
