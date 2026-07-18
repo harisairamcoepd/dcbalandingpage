@@ -292,10 +292,15 @@
   });
   let dragStartX = 0;
   let draggingStories = false;
+  let storyWasDragged = false;
   storyTrack?.addEventListener('pointerdown', event => {
     dragStartX = event.clientX;
     draggingStories = true;
+    storyWasDragged = false;
     storyTrack.setPointerCapture?.(event.pointerId);
+  });
+  storyTrack?.addEventListener('pointermove', event => {
+    if (draggingStories && Math.abs(event.clientX - dragStartX) > 8) storyWasDragged = true;
   });
   storyTrack?.addEventListener('pointerup', event => {
     if (!draggingStories) return;
@@ -303,7 +308,7 @@
     draggingStories = false;
     if (Math.abs(distance) > 45) goToStory(storyIndex + (distance < 0 ? 1 : -1));
   });
-  storyTrack?.addEventListener('pointercancel', () => { draggingStories = false; });
+  storyTrack?.addEventListener('pointercancel', () => { draggingStories = false; storyWasDragged = true; });
   goToStory(0, false);
   let storyTimer = reducedMotion ? 0 : setInterval(() => goToStory(storyIndex + 1), 5200);
   storyTrack?.addEventListener('pointerenter', () => clearInterval(storyTimer));
@@ -435,7 +440,7 @@
   };
   document.querySelectorAll('.success-story-card').forEach(card => {
     const copy = card.querySelector('.success-story-copy');
-    if (copy && !copy.querySelector('.view-story')) { const button=document.createElement('button'); button.type='button'; button.className='view-story'; button.textContent='View Story →'; button.setAttribute('aria-label',`View ${card.querySelector('h3')?.textContent || 'learner'} success story`); copy.appendChild(button); }
+    if (copy && !copy.querySelector('.view-story')) { const button=document.createElement('button'); button.type='button'; button.className='view-story'; button.dataset.storyOpen=''; button.textContent='View Story →'; button.setAttribute('aria-label',`View ${card.querySelector('h3')?.textContent || 'learner'} success story`); copy.appendChild(button); }
   });
   const interactiveGroups = [['#program .card','highlight'],['.feature-cloud span','curriculum'],['.audience-grid article','audience'],['.month-timeline li','journey'],['.project','project'],['.tools>span','tool'],['.commitment-grid article','guarantee'],['.guarantee-grid article','guarantee'],['.partner-card','partner']];
   interactiveGroups.forEach(([selector,type]) => document.querySelectorAll(selector).forEach(item => {
@@ -456,7 +461,10 @@
   });
   storyTrack?.addEventListener('click', event => {
     const card = event.target.closest('.success-story-card');
-    if (!card || Math.abs((event.clientX || 0) - dragStartX) > 8) return;
+    if (!card) return;
+    const explicitButton = event.target.closest('[data-story-open]');
+    if (!explicitButton && storyWasDragged) { storyWasDragged = false; return; }
+    storyWasDragged = false;
     event.preventDefault(); openModal(card,'story');
   });
   modal?.addEventListener('click', event => { if (event.target.closest('[data-modal-close]')) closeModal(); });
