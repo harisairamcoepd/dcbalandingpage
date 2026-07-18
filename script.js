@@ -224,11 +224,15 @@
     if (heading) heading.innerHTML = '<span class="eyebrow">Career Outcomes</span><h2 id="success-stories-title">Success Stories</h2><p>Thousands of professionals have successfully transformed their careers through COEPD.</p>';
     const fragment = document.createDocumentFragment();
     successRecords.forEach(([name, outcome], index) => {
+      const outcomeParts = outcome.split('·').map(part => part.trim()).filter(Boolean);
+      const packageText = outcomeParts.find(part => /(?:LPA|salary hike|%|package)/i.test(part)) || 'Not published';
+      const companyText = outcomeParts.filter(part => part !== packageText).join(' · ') || 'COEPD placement outcome';
       const card = document.createElement('article');
       card.className = 'success-story-card';
+      card.dataset.company = companyText; card.dataset.role = 'Business Analyst'; card.dataset.package = packageText;
       card.dataset.reveal = '';
       card.style.setProperty('--story-delay', `${(index % 4) * .1}s`);
-      card.innerHTML = `<div class="success-story-media"><img src="assets/success-stories/success-story-${String(index + 1).padStart(2, '0')}.jpeg" width="574" height="578" loading="lazy" decoding="async" alt="COEPD success story: ${name} — ${outcome}" title="${name} — COEPD career success"><div class="success-story-overlay" aria-hidden="true"><span>Business Analyst</span><span>Career Success</span><span>COEPD Graduate</span></div></div><div class="success-story-copy"><h3>${name}</h3><p>${outcome}</p></div>`;
+      card.innerHTML = `<div class="success-story-media"><img src="assets/success-stories/success-story-${String(index + 1).padStart(2, '0')}.jpeg" width="574" height="578" loading="lazy" decoding="async" alt="COEPD success story: ${name} — ${outcome}" title="${name} — COEPD career success"><div class="success-story-overlay" aria-hidden="true"><span>Business Analyst</span><span>Career Success</span><span>COEPD Graduate</span></div></div><div class="success-story-copy"><h3>${name}</h3><dl><div><dt>Company</dt><dd>${companyText}</dd></div><div><dt>Role</dt><dd>Business Analyst</dd></div><div><dt>Package</dt><dd>${packageText}</dd></div></dl><p>A published COEPD career outcome built through practical preparation and interview readiness.</p></div>`;
       fragment.appendChild(card);
     });
     storyTrack.querySelector('noscript')?.remove();
@@ -323,6 +327,7 @@
   const dialog = modal?.querySelector('.modal-dialog');
   let modalReturnFocus = null;
   let activeToolIndex = -1;
+  let activeStoryIndex = -1;
   const toolCards = [...document.querySelectorAll('.tools > span')];
   const toolDetails = [
     {name:'JIRA',about:'JIRA is an Agile work-management platform for planning, tracking and delivering projects.',use:'Business Analysts manage requirements, user stories, acceptance criteria, sprints and defects in one shared workflow.',features:'Sprint planning • User-story tracking • Bug tracking • Requirement management',skills:'Backlog refinement • Story writing • Traceability • Agile collaboration',example:'For a digital lending project, the BA converts approved requirements into prioritised stories and tracks them through testing.',industries:'IT services • Banking • Healthcare • Retail • Telecom',benefit:'Demonstrates practical Agile delivery skills expected by enterprise teams.'},
@@ -387,21 +392,25 @@
       nav.querySelector('span').textContent = `${activeToolIndex + 1} / ${toolDetails.length}`;
     } else if (type === 'story') {
       activeToolIndex = -1;
+      activeStoryIndex = storyCards.indexOf(trigger);
       modal.classList.remove('tool-modal'); modal.classList.add('story-modal');
       const title = trigger.querySelector('h3')?.textContent?.trim() || 'COEPD learner';
-      const outcome = trigger.querySelector('.success-story-copy p')?.textContent?.trim() || 'Career outcome';
+      const company = trigger.dataset.company || 'Not published';
+      const role = trigger.dataset.role || 'Business Analyst';
+      const result = trigger.dataset.package || 'Not published';
       const image = trigger.querySelector('img');
-      const company = outcome.split('·')[0].trim();
-      const result = outcome.split('·').slice(1).join('·').trim() || 'Business Analyst';
       document.querySelector('#modal-kicker').textContent = 'COEPD Success Story';
       document.querySelector('#modal-title').textContent = title;
-      document.querySelector('#modal-summary').textContent = 'Successfully progressed through practical learning, project preparation and career-readiness support.';
-      document.querySelector('#modal-visual').innerHTML = `<img src="${image.src}" alt="${image.alt}">`;
-      document.querySelector('#modal-details').innerHTML = [['Current Company',company],['Current Role','Business Analyst'],['Published Outcome',result],['Learning Evidence','Capstone and practical project work'],['Career Preparation','Profile, communication and interview practice'],['Career Journey','Previous experience → Analyst role']].map(([label,value]) => `<div><strong>${label}</strong><span>${value}</span></div>`).join('');
+      document.querySelector('#modal-summary').textContent = `${title} progressed toward an analyst career through structured learning, business projects, mentor feedback, profile preparation and interview practice.`;
+      document.querySelector('#modal-visual').innerHTML = `<div class="story-poster"><img src="${image.src}" alt="${image.alt}" loading="eager"><span class="story-image-count">1 / 1</span></div>`;
+      document.querySelector('#modal-details').innerHTML = [['Current Company',company],['Current Role',role],['Salary Package',result],['Previous Domain','See published success poster'],['Current Domain','Business Analysis / IT'],['Career Journey',`Previous experience → ${role}`],['Career Gap','Not publicly disclosed'],['Projects Completed','Capstone and practical business projects'],['Tools Learned','JIRA, documentation, process and analytics tools'],['Placement Month','Not publicly disclosed']].map(([label,value],row) => `<div style="--row:${row}"><strong>${label}</strong><span>${value}</span></div>`).join('');
       const cta = modal.querySelector('.modal-content>.btn'); cta.textContent = 'Book Demo'; cta.style.display = '';
       let enroll = modal.querySelector('.story-enroll');
       if (!enroll) { enroll = document.createElement('a'); enroll.className = 'btn btn-outline story-enroll'; enroll.href = demoUrl; enroll.target = '_blank'; enroll.rel = 'noopener noreferrer'; enroll.textContent = 'Enquire Now'; cta.after(enroll); }
       enroll.removeAttribute('hidden');
+      let storyNav = modal.querySelector('.story-modal-nav');
+      if (!storyNav) { storyNav = document.createElement('nav'); storyNav.className = 'story-modal-nav'; storyNav.setAttribute('aria-label','Browse success stories'); storyNav.innerHTML = '<button type="button" data-story-modal-prev>← Previous Student</button><span></span><button type="button" data-story-modal-next>Next Student →</button>'; modal.querySelector('.modal-content').appendChild(storyNav); }
+      storyNav.querySelector('span').textContent = `${activeStoryIndex + 1} / ${storyCards.length}`;
     } else {
       modal.classList.remove('story-modal');
       modal.classList.remove('tool-modal');
@@ -457,8 +466,19 @@
     openModal(toolCards[(activeToolIndex + direction + toolCards.length) % toolCards.length], 'tool');
     dialog?.scrollTo({top:0,behavior:reducedMotion?'auto':'smooth'});
   });
+  modal?.addEventListener('click', event => {
+    const direction = event.target.closest('[data-story-modal-prev]') ? -1 : event.target.closest('[data-story-modal-next]') ? 1 : 0;
+    if (!direction || activeStoryIndex < 0) return;
+    openModal(storyCards[(activeStoryIndex + direction + storyCards.length) % storyCards.length], 'story');
+    dialog?.scrollTo({top:0,behavior:reducedMotion?'auto':'smooth'});
+  });
   addEventListener('keydown', event => {
     if (event.key === 'Escape') closeModal();
+    if (!modal?.hidden && modal.classList.contains('story-modal') && (event.key === 'ArrowLeft' || event.key === 'ArrowRight') && !event.target.matches('input,textarea,select')) {
+      event.preventDefault(); const direction = event.key === 'ArrowLeft' ? -1 : 1;
+      openModal(storyCards[(activeStoryIndex + direction + storyCards.length) % storyCards.length], 'story');
+      dialog?.scrollTo({top:0,behavior:reducedMotion?'auto':'smooth'});
+    }
     if (event.key === 'Tab' && modal && !modal.hidden) {
       const focusable = [...modal.querySelectorAll('button,a[href]')];
       if (!focusable.length) return;
