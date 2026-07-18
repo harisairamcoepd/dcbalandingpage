@@ -27,10 +27,15 @@ jobs:
         uses: actions/configure-pages@v5
         with:
           enablement: true
+      - name: Prepare production artifact
+        run: |
+          mkdir _site
+          cp index.html styles.css script.js robots.txt sitemap.xml site.webmanifest .nojekyll _headers _site/
+          cp -R assets _site/assets
       - name: Upload static site
         uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          path: _site
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

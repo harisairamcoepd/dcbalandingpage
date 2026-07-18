@@ -455,11 +455,8 @@
       ripple.addEventListener('animationend',()=>ripple.remove(),{once:true});
     });
   }));
-  document.querySelectorAll('.success-story-card').forEach(card => {
-    card.tabIndex = 0; card.setAttribute('role','button'); card.setAttribute('aria-haspopup','dialog');
-    card.setAttribute('aria-label',`View success story: ${card.querySelector('h3')?.textContent || 'COEPD learner'}`);
-    card.addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openModal(card,'story'); } });
-  });
+  // The visible View Story button is the card's keyboard-accessible control.
+  // Avoid nesting that button inside another element with button semantics.
   storyTrack?.addEventListener('click', event => {
     const card = event.target.closest('.success-story-card');
     if (!card) return;
@@ -500,7 +497,7 @@
     if (event.key === 'Tab' && modal && !modal.hidden) {
       const focusable = [...modal.querySelectorAll('button,a[href]')];
       if (!focusable.length) return;
-      const first = focusable[0], last = focusable.at(-1);
+      const first = focusable[0], last = focusable[focusable.length - 1];
       if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
       else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
     }
