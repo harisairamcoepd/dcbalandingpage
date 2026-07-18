@@ -356,6 +356,8 @@
     });
   });
   const detailCopy = {
+    highlight: ['Program highlight','Explore how this part of DCBA supports practical, measurable professional development.', [['Purpose','Build one focused workplace capability'],['Method','Guided learning with realistic practice'],['Evidence','Assignments, reviews and portfolio outputs'],['Value','Clear progress toward project readiness']]],
+    curriculum: ['Curriculum capability','This capability is taught through explanation, application, feedback and workplace context.', [['Learn','Core concepts and professional standards'],['Apply','Scenario-based assignments and activities'],['Review','Feedback against clear expectations'],['Outcome','A skill you can demonstrate with evidence']]],
     audience: ['Who can join','A practical route for graduates ready to enter or re-enter professional work.', [['Eligibility','Graduation in any discipline'],['Profiles','Returners, fresh graduates and domain changers'],['Communication','Working English is required'],['Background','No coding or IT experience needed']]],
     journey: ['Learning journey','Each month builds a distinct capability through guided practice, review and portfolio evidence.', [['Learning','Focused concepts and professional methods'],['Practice','Assignments based on workplace scenarios'],['Feedback','Mentor review and measurable progress'],['Outcome','A clear milestone toward project and interview readiness']]],
     project: ['Project experience','Turn a business scenario into clear, reviewable analyst deliverables.', [['Objective','Solve a realistic business problem'],['Deliverables','Flows, requirements, stories and test support'],['Practice','Stakeholder thinking and Agile collaboration'],['Outcome','Portfolio evidence you can discuss in interviews']]],
@@ -365,6 +367,9 @@
   };
   const openModal = (trigger, type) => {
     if (!modal) return;
+    modal.querySelector('.story-enroll')?.setAttribute('hidden','');
+    const primaryModalCta = modal.querySelector('.modal-content>.btn');
+    if (primaryModalCta) primaryModalCta.textContent = 'Book Free Demo';
     if (type === 'tool') {
       activeToolIndex = Number(trigger.dataset.toolIndex);
       const tool = toolDetails[activeToolIndex];
@@ -380,10 +385,28 @@
       let nav = modal.querySelector('.tool-modal-nav');
       if (!nav) { nav = document.createElement('div'); nav.className = 'tool-modal-nav'; nav.innerHTML = '<button type="button" data-tool-prev>← Previous</button><span></span><button type="button" data-tool-next>Next →</button>'; modal.querySelector('.modal-content').appendChild(nav); }
       nav.querySelector('span').textContent = `${activeToolIndex + 1} / ${toolDetails.length}`;
+    } else if (type === 'story') {
+      activeToolIndex = -1;
+      modal.classList.remove('tool-modal'); modal.classList.add('story-modal');
+      const title = trigger.querySelector('h3')?.textContent?.trim() || 'COEPD learner';
+      const outcome = trigger.querySelector('.success-story-copy p')?.textContent?.trim() || 'Career outcome';
+      const image = trigger.querySelector('img');
+      const company = outcome.split('·')[0].trim();
+      const result = outcome.split('·').slice(1).join('·').trim() || 'Business Analyst';
+      document.querySelector('#modal-kicker').textContent = 'COEPD Success Story';
+      document.querySelector('#modal-title').textContent = title;
+      document.querySelector('#modal-summary').textContent = 'Successfully progressed through practical learning, project preparation and career-readiness support.';
+      document.querySelector('#modal-visual').innerHTML = `<img src="${image.src}" alt="${image.alt}">`;
+      document.querySelector('#modal-details').innerHTML = [['Current Company',company],['Current Role','Business Analyst'],['Published Outcome',result],['Learning Evidence','Capstone and practical project work'],['Career Preparation','Profile, communication and interview practice'],['Career Journey','Previous experience → Analyst role']].map(([label,value]) => `<div><strong>${label}</strong><span>${value}</span></div>`).join('');
+      const cta = modal.querySelector('.modal-content>.btn'); cta.textContent = 'Book Demo'; cta.style.display = '';
+      let enroll = modal.querySelector('.story-enroll');
+      if (!enroll) { enroll = document.createElement('a'); enroll.className = 'btn btn-outline story-enroll'; enroll.href = demoUrl; enroll.target = '_blank'; enroll.rel = 'noopener noreferrer'; enroll.textContent = 'Enquire Now'; cta.after(enroll); }
+      enroll.removeAttribute('hidden');
     } else {
+      modal.classList.remove('story-modal');
       modal.classList.remove('tool-modal');
     const base = detailCopy[type];
-    const title = trigger.querySelector('h3,b')?.textContent?.trim() || trigger.querySelector('img')?.alt || base[0];
+    const title = trigger.querySelector('h3,b')?.textContent?.trim() || trigger.querySelector('img')?.alt || trigger.textContent?.trim() || base[0];
     const summary = trigger.querySelector('p,small')?.textContent?.trim() || base[1];
     document.querySelector('#modal-kicker').textContent = base[0];
     document.querySelector('#modal-title').textContent = title;
@@ -396,12 +419,26 @@
     modalReturnFocus = trigger;
     modal.hidden = false; modal.setAttribute('aria-hidden','false'); document.body.classList.add('modal-open'); dialog?.focus();
   };
-  const closeModal = () => { if (!modal || modal.hidden) return; modal.hidden = true; modal.setAttribute('aria-hidden','true'); document.body.classList.remove('modal-open'); modalReturnFocus?.focus(); };
-  const interactiveGroups = [['.audience-grid article','audience'],['.month-timeline li','journey'],['.project','project'],['.tools>span','tool'],['.guarantee-grid article','guarantee'],['.partner-card','partner'],['.success-story-card','story']];
+  const closeModal = () => {
+    if (!modal || modal.hidden || modal.classList.contains('closing')) return;
+    modal.classList.add('closing'); modal.setAttribute('aria-hidden','true');
+    setTimeout(() => { modal.hidden = true; modal.classList.remove('closing','tool-modal','story-modal'); document.body.classList.remove('modal-open'); modalReturnFocus?.focus(); }, reducedMotion ? 0 : 190);
+  };
+  document.querySelectorAll('.success-story-card').forEach(card => {
+    const copy = card.querySelector('.success-story-copy');
+    if (copy && !copy.querySelector('.view-story')) { const button=document.createElement('span'); button.className='view-story'; button.textContent='View Story →'; copy.appendChild(button); }
+  });
+  const interactiveGroups = [['#program .card','highlight'],['.feature-cloud span','curriculum'],['.audience-grid article','audience'],['.month-timeline li','journey'],['.project','project'],['.tools>span','tool'],['.commitment-grid article','guarantee'],['.guarantee-grid article','guarantee'],['.partner-card','partner'],['.success-story-card','story']];
   interactiveGroups.forEach(([selector,type]) => document.querySelectorAll(selector).forEach(item => {
     item.tabIndex = 0; item.setAttribute('role','button'); item.setAttribute('aria-label',`View details: ${item.textContent.trim().replace(/\s+/g,' ')}`);
     item.addEventListener('click', () => openModal(item,type));
     item.addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openModal(item,type); } });
+    item.addEventListener('pointerdown', event => {
+      if (reducedMotion || item.matches('.tools>span')) return;
+      const box=item.getBoundingClientRect(), ripple=document.createElement('i'); ripple.className='card-ripple';
+      ripple.style.left=`${event.clientX-box.left}px`; ripple.style.top=`${event.clientY-box.top}px`; item.appendChild(ripple);
+      ripple.addEventListener('animationend',()=>ripple.remove(),{once:true});
+    });
   }));
   modal?.addEventListener('click', event => { if (event.target.closest('[data-modal-close]')) closeModal(); });
   modal?.addEventListener('click', event => {
