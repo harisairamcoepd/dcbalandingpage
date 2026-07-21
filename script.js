@@ -107,15 +107,15 @@
     requestAnimationFrame(animatePartners);
   }
 
-  const heroPanel = document.querySelector('.hero-panel');
-  heroPanel?.addEventListener('pointermove', event => {
+  const trainerCard = document.querySelector('.trainer-card');
+  trainerCard?.addEventListener('pointermove', event => {
     if (reducedMotion || event.pointerType === 'touch') return;
-    const box = heroPanel.getBoundingClientRect();
+    const box = trainerCard.getBoundingClientRect();
     const x = (event.clientX - box.left) / box.width - .5;
     const y = (event.clientY - box.top) / box.height - .5;
-    heroPanel.style.transform = `perspective(1000px) rotateX(${-y * 2.5}deg) rotateY(${x * 2.5}deg) translateY(-2px)`;
+    trainerCard.style.transform = `perspective(1100px) rotateX(${-y * 2}deg) rotateY(${x * 2}deg) translateY(-3px)`;
   });
-  heroPanel?.addEventListener('pointerleave', () => { heroPanel.style.transform = ''; });
+  trainerCard?.addEventListener('pointerleave', () => { trainerCard.style.transform = ''; });
 
   if (!reducedMotion) {
     let parallaxQueued = false;
@@ -268,17 +268,57 @@
     storyCards.forEach(card => successReveal.observe(card));
   }
   const storyDots = document.querySelector('[data-story-dots]');
+  const cloneCount = Math.min(4, storyCards.length);
+  const leadingClones = document.createDocumentFragment();
+  storyCards.slice(-cloneCount).forEach(card => {
+    const clone = card.cloneNode(true); clone.dataset.carouselClone = 'true'; clone.classList.add('visible'); clone.setAttribute('aria-hidden','true'); clone.querySelectorAll('button,a').forEach(el => el.tabIndex = -1); leadingClones.appendChild(clone);
+  });
+  successGrid?.prepend(leadingClones);
+  storyCards.slice(0, cloneCount).forEach(card => {
+    const clone = card.cloneNode(true); clone.dataset.carouselClone = 'true'; clone.classList.add('visible'); clone.setAttribute('aria-hidden','true'); clone.querySelectorAll('button,a').forEach(el => el.tabIndex = -1); successGrid?.append(clone);
+  });
   let storyIndex = 0;
-  const visibleStories = () => innerWidth < 621 ? 1 : innerWidth < 961 ? 2 : 3;
-  const goToStory = (index, shouldScroll = true) => {
-    if (!storyTrack || !storyCards.length) return;
-    storyIndex = (index + storyCards.length) % storyCards.length;
-    if (shouldScroll && successGrid) {
-      const gap = parseFloat(getComputedStyle(successGrid).gap) || 24;
-      successGrid.style.transform = `translateX(-${storyIndex * (storyCards[0].getBoundingClientRect().width + gap)}px)`;
-    }
-    storyDots?.querySelectorAll('button').forEach((dot, i) => dot.classList.toggle('active', i === storyIndex));
+  let storyPosition = cloneCount;
+  let storyStep = 0;
+  let storyAnimating = false;
+  const updateStoryState = () => {
+    storyDots?.querySelectorAll('button').forEach((dot, i) => {
+      const active = i === storyIndex; dot.classList.toggle('active', active); dot.setAttribute('aria-current', active ? 'true' : 'false');
+    });
   };
+  const measureStories = () => {
+    if (!successGrid || !storyCards.length) return;
+    const gap = parseFloat(getComputedStyle(successGrid).gap) || 24;
+    storyStep = storyCards[0].getBoundingClientRect().width + gap;
+    successGrid.style.transition = 'none';
+    successGrid.style.transform = `translate3d(-${storyPosition * storyStep}px,0,0)`;
+    successGrid.offsetHeight;
+    successGrid.style.transition = '';
+  };
+  const goToStory = (index, animate = true) => {
+    if (!storyTrack || !storyCards.length || (storyAnimating && animate)) return;
+    const direction = index > storyIndex ? 1 : index < storyIndex ? -1 : 0;
+    if (Math.abs(index - storyIndex) > 1) storyPosition = cloneCount + ((index % storyCards.length) + storyCards.length) % storyCards.length;
+    else storyPosition += direction;
+    storyIndex = ((index % storyCards.length) + storyCards.length) % storyCards.length;
+    if (!storyStep) measureStories();
+    successGrid.style.transition = animate && !reducedMotion ? '' : 'none';
+    successGrid.style.transform = `translate3d(-${storyPosition * storyStep}px,0,0)`;
+    storyAnimating = animate && !reducedMotion;
+    updateStoryState();
+    if (!storyAnimating) { successGrid.offsetHeight; successGrid.style.transition = ''; }
+  };
+  successGrid?.addEventListener('transitionend', event => {
+    if (event.propertyName !== 'transform') return;
+    storyAnimating = false;
+    if (storyPosition < cloneCount || storyPosition >= cloneCount + storyCards.length) {
+      storyPosition = cloneCount + storyIndex;
+      successGrid.style.transition = 'none';
+      successGrid.style.transform = `translate3d(-${storyPosition * storyStep}px,0,0)`;
+      successGrid.offsetHeight;
+      successGrid.style.transition = '';
+    }
+  });
   storyCards.forEach((_, index) => {
     const dot = document.createElement('button');
     dot.type = 'button'; dot.className = 'success-carousel-dot'; dot.setAttribute('aria-label', `Show success story ${index + 1}`);
@@ -292,28 +332,47 @@
     if (event.key === 'ArrowLeft') goToStory(storyIndex - 1);
   });
   let dragStartX = 0;
+  let dragOffsetX = 0;
   let draggingStories = false;
   let storyWasDragged = false;
   storyTrack?.addEventListener('pointerdown', event => {
+    if (event.button !== undefined && event.button !== 0) return;
+    if (event.target.closest('button,a,input,select,textarea')) return;
     dragStartX = event.clientX;
+    dragOffsetX = 0;
     draggingStories = true;
     storyWasDragged = false;
+    storyAnimating = false;
+    successGrid.style.transition = 'none';
+    storyTrack.classList.add('is-dragging');
     storyTrack.setPointerCapture?.(event.pointerId);
   });
   storyTrack?.addEventListener('pointermove', event => {
-    if (draggingStories && Math.abs(event.clientX - dragStartX) > 8) storyWasDragged = true;
+    if (!draggingStories) return;
+    dragOffsetX = event.clientX - dragStartX;
+    if (Math.abs(dragOffsetX) > 8) storyWasDragged = true;
+    successGrid.style.transform = `translate3d(${-(storyPosition * storyStep) + dragOffsetX}px,0,0)`;
   });
   storyTrack?.addEventListener('pointerup', event => {
     if (!draggingStories) return;
-    const distance = event.clientX - dragStartX;
     draggingStories = false;
-    if (Math.abs(distance) > 45) goToStory(storyIndex + (distance < 0 ? 1 : -1));
+    storyTrack.classList.remove('is-dragging');
+    successGrid.style.transition = '';
+    if (Math.abs(dragOffsetX) > Math.min(80, storyStep * .18)) goToStory(storyIndex + (dragOffsetX < 0 ? 1 : -1));
+    else { successGrid.style.transform = `translate3d(-${storyPosition * storyStep}px,0,0)`; storyAnimating = !reducedMotion; }
   });
-  storyTrack?.addEventListener('pointercancel', () => { draggingStories = false; storyWasDragged = true; });
-  goToStory(0, false);
-  let storyTimer = reducedMotion ? 0 : setInterval(() => goToStory(storyIndex + 1), 5200);
-  storyTrack?.addEventListener('pointerenter', () => clearInterval(storyTimer));
-  storyTrack?.addEventListener('pointerleave', () => { if (!reducedMotion) storyTimer = setInterval(() => goToStory(storyIndex + 1), 5200); });
+  storyTrack?.addEventListener('pointercancel', () => { draggingStories = false; storyWasDragged = true; storyTrack.classList.remove('is-dragging'); measureStories(); });
+  measureStories(); updateStoryState();
+  let storyTimer = 0;
+  const stopStoryAuto = () => { clearInterval(storyTimer); storyTimer = 0; };
+  const startStoryAuto = () => { stopStoryAuto(); if (!reducedMotion && !document.hidden) storyTimer = setInterval(() => goToStory(storyIndex + 1), 4200); };
+  storyTrack?.addEventListener('pointerenter', stopStoryAuto);
+  storyTrack?.addEventListener('pointerleave', startStoryAuto);
+  storyTrack?.addEventListener('focusin', stopStoryAuto);
+  storyTrack?.addEventListener('focusout', event => { if (!storyTrack.contains(event.relatedTarget)) startStoryAuto(); });
+  document.addEventListener('visibilitychange', () => document.hidden ? stopStoryAuto() : startStoryAuto());
+  addEventListener('resize', () => requestAnimationFrame(measureStories), {passive:true});
+  startStoryAuto();
 
   const faqSearch = document.querySelector('#faq-search');
   const faqItems = [...document.querySelectorAll('#faq details')];
@@ -334,6 +393,7 @@
   let modalReturnFocus = null;
   let activeToolIndex = -1;
   let activeStoryIndex = -1;
+  let modalCloseTimer = 0;
   const toolCards = [...document.querySelectorAll('.tools > span')];
   const toolDetails = [
     {name:'JIRA',about:'JIRA is an Agile work-management platform for planning, tracking and delivering projects.',use:'Business Analysts manage requirements, user stories, acceptance criteria, sprints and defects in one shared workflow.',features:'Sprint planning • User-story tracking • Bug tracking • Requirement management',skills:'Backlog refinement • Story writing • Traceability • Agile collaboration',example:'For a digital lending project, the BA converts approved requirements into prioritised stories and tracks them through testing.',industries:'IT services • Banking • Healthcare • Retail • Telecom',benefit:'Demonstrates practical Agile delivery skills expected by enterprise teams.'},
@@ -378,6 +438,11 @@
   };
   const openModal = (trigger, type) => {
     if (!modal) return;
+    if (modalCloseTimer) {
+      clearTimeout(modalCloseTimer);
+      modalCloseTimer = 0;
+    }
+    modal.classList.remove('closing');
     modal.querySelector('.story-enroll')?.setAttribute('hidden','');
     const primaryModalCta = modal.querySelector('.modal-content>.btn');
     if (primaryModalCta) primaryModalCta.textContent = 'Book Free Demo';
@@ -398,7 +463,7 @@
       nav.querySelector('span').textContent = `${activeToolIndex + 1} / ${toolDetails.length}`;
     } else if (type === 'story') {
       activeToolIndex = -1;
-      activeStoryIndex = storyCards.indexOf(trigger);
+      activeStoryIndex = Number.isInteger(Number(trigger.dataset.storyIndex)) ? Number(trigger.dataset.storyIndex) : storyCards.indexOf(trigger);
       modal.classList.remove('tool-modal'); modal.classList.add('story-modal');
       const title = trigger.querySelector('h3')?.textContent?.trim() || 'COEPD learner';
       const company = trigger.dataset.company || 'Not published';
@@ -410,9 +475,9 @@
       document.querySelector('#modal-summary').textContent = `${title} progressed toward an analyst career through structured learning, business projects, mentor feedback, profile preparation and interview practice.`;
       document.querySelector('#modal-visual').innerHTML = `<div class="story-poster"><img src="${image.src}" alt="${image.alt}" loading="eager"><span class="story-image-count">1 / 1</span></div>`;
       document.querySelector('#modal-details').innerHTML = [['Current Company',company],['Current Role',role],['Salary Package',result],['Previous Domain','See published success poster'],['Current Domain','Business Analysis / IT'],['Career Journey',`Previous experience → ${role}`],['Career Gap','Not publicly disclosed'],['Projects Completed','Capstone and practical business projects'],['Tools Learned','JIRA, documentation, process and analytics tools'],['Placement Month','Not publicly disclosed']].map(([label,value],row) => `<div style="--row:${row}"><strong>${label}</strong><span>${value}</span></div>`).join('');
-      const cta = modal.querySelector('.modal-content>.btn'); cta.textContent = 'Book Demo'; cta.style.display = '';
+      const cta = modal.querySelector('.modal-content>.btn'); cta.textContent = 'Book Free Demo'; cta.style.display = '';
       let enroll = modal.querySelector('.story-enroll');
-      if (!enroll) { enroll = document.createElement('a'); enroll.className = 'btn btn-outline story-enroll'; enroll.href = demoUrl; enroll.target = '_blank'; enroll.rel = 'noopener noreferrer'; enroll.textContent = 'Enquire Now'; cta.after(enroll); }
+      if (!enroll) { enroll = document.createElement('a'); enroll.className = 'btn btn-outline story-enroll'; enroll.href = demoUrl; enroll.target = '_blank'; enroll.rel = 'noopener noreferrer'; enroll.textContent = 'Enroll Now'; cta.after(enroll); }
       enroll.removeAttribute('hidden');
       let storyNav = modal.querySelector('.story-modal-nav');
       if (!storyNav) { storyNav = document.createElement('nav'); storyNav.className = 'story-modal-nav'; storyNav.setAttribute('aria-label','Browse success stories'); storyNav.innerHTML = '<button type="button" data-story-modal-prev>← Previous Student</button><span></span><button type="button" data-story-modal-next>Next Student →</button>'; modal.querySelector('.modal-content').appendChild(storyNav); }
@@ -437,7 +502,13 @@
   const closeModal = () => {
     if (!modal || modal.hidden || modal.classList.contains('closing')) return;
     modal.classList.add('closing'); modal.setAttribute('aria-hidden','true');
-    setTimeout(() => { modal.hidden = true; modal.classList.remove('closing','tool-modal','story-modal'); document.body.classList.remove('modal-open'); modalReturnFocus?.focus(); }, reducedMotion ? 0 : 190);
+    modalCloseTimer = window.setTimeout(() => {
+      modalCloseTimer = 0;
+      modal.hidden = true;
+      modal.classList.remove('closing','tool-modal','story-modal');
+      document.body.classList.remove('modal-open');
+      modalReturnFocus?.focus();
+    }, reducedMotion ? 0 : (modal.classList.contains('story-modal') ? 280 : 190));
   };
   document.querySelectorAll('.success-story-card').forEach(card => {
     const copy = card.querySelector('.success-story-copy');
