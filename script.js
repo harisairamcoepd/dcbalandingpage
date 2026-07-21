@@ -487,18 +487,19 @@
       document.querySelector('#modal-kicker').textContent = 'COEPD Success Story';
       document.querySelector('#modal-title').textContent = title;
       document.querySelector('#modal-summary').textContent = `Successfully placed as a ${role}.`;
-      document.querySelector('#modal-visual').innerHTML = `<div class="story-poster"><img src="${image.src}" alt="${image.alt}" loading="eager" decoding="async"></div>`;
+      document.querySelector('#modal-visual').innerHTML = `<div class="story-poster"><img src="${image.src}" alt="${image.alt}" loading="eager" decoding="async"><button class="story-image-nav story-image-prev" type="button" data-story-modal-prev aria-label="Previous success story">‹</button><button class="story-image-nav story-image-next" type="button" data-story-modal-next aria-label="Next success story">›</button></div>`;
       document.querySelector('#modal-details').innerHTML = [['Current Company',storyCompany],['Current Role',role],['Salary Package',storyPackage],['Previous Domain',previousDomain],['Current Domain',currentDomain],['Career Journey',`${previousDomain} → ${currentDomain}`]].map(([label,value],row) => `<div style="--row:${row}"><strong>${label}</strong><span>${value}</span></div>`).join('');
       const cta = primaryModalCta; cta.textContent = 'Book Free Demo'; cta.style.display = '';
       let enroll = modal.querySelector('.story-enroll');
-      if (!enroll) { enroll = document.createElement('a'); enroll.className = 'btn btn-outline story-enroll'; enroll.href = demoUrl; enroll.target = '_blank'; enroll.rel = 'noopener noreferrer'; enroll.textContent = 'Enroll Now'; cta.after(enroll); }
+      if (!enroll) { enroll = document.createElement('a'); enroll.className = 'btn btn-outline story-enroll'; enroll.href = '#contact'; enroll.textContent = 'Enroll Now'; cta.after(enroll); }
       enroll.removeAttribute('hidden');
       let actions = modal.querySelector('.story-actions');
       if (!actions) { actions = document.createElement('div'); actions.className = 'story-actions'; cta.before(actions); }
       actions.append(cta, enroll);
-      let storyNav = modal.querySelector('.story-modal-nav');
-      if (!storyNav) { storyNav = document.createElement('nav'); storyNav.className = 'story-modal-nav'; storyNav.setAttribute('aria-label','Browse success stories'); storyNav.innerHTML = '<button type="button" data-story-modal-prev>← Previous Student</button><span></span><button type="button" data-story-modal-next>Next Student →</button>'; modal.querySelector('.modal-content').appendChild(storyNav); }
-      storyNav.querySelector('span').textContent = `${activeStoryIndex + 1} / ${storyCards.length}`;
+      [-1, 1].forEach(offset => {
+        const adjacent = storyCards[(activeStoryIndex + offset + storyCards.length) % storyCards.length]?.querySelector('img');
+        if (adjacent) { const preload = new Image(); preload.src = adjacent.src; }
+      });
     } else {
       modal.classList.remove('story-modal');
       modal.classList.remove('tool-modal');
@@ -562,7 +563,14 @@
     event.preventDefault(); event.stopPropagation();
     openModal(card,'story');
   }, true);
-  modal?.addEventListener('click', event => { if (event.target.closest('[data-modal-close]')) closeModal(); });
+  modal?.addEventListener('click', event => {
+    if (event.target.closest('[data-modal-close]')) closeModal();
+    if (event.target.closest('.story-enroll')) {
+      event.preventDefault();
+      closeModal();
+      window.setTimeout(() => document.querySelector('#contact')?.scrollIntoView({behavior: reducedMotion ? 'auto' : 'smooth'}), reducedMotion ? 0 : 300);
+    }
+  });
   modal?.addEventListener('click', event => {
     const direction = event.target.closest('[data-tool-prev]') ? -1 : event.target.closest('[data-tool-next]') ? 1 : 0;
     if (!direction || activeToolIndex < 0) return;
