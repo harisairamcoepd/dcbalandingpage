@@ -1,0 +1,40 @@
+/* Success-story modal: reference layout rebuild. */
+.detail-modal.story-modal{padding:16px}
+.detail-modal.story-modal .modal-dialog{width:min(90vw,1280px);height:min(90dvh,820px);max-height:90dvh;padding:32px;grid-template-columns:minmax(0,59fr) minmax(380px,41fr);grid-template-rows:minmax(0,1fr);gap:32px;overflow:hidden;border-radius:28px;background:#fff}
+.detail-modal.story-modal .modal-close{top:16px;right:16px}
+.detail-modal.story-modal .modal-visual{grid-column:1;grid-row:1;width:100%;height:100%;min-width:0;min-height:0;padding:18px;overflow:hidden;border-radius:22px;background:#f7f8fc}
+.detail-modal.story-modal .story-poster{width:100%;height:100%;min-width:0;min-height:0;overflow:visible;border-radius:20px;background:#f7f8fc}
+.detail-modal.story-modal .story-poster img{display:block;width:100%;height:100%;max-width:100%;max-height:100%;object-fit:contain;object-position:center;border-radius:20px;box-shadow:0 14px 36px rgba(15,35,75,.14);transform:none}
+.detail-modal.story-modal .story-poster:hover img{transform:none}
+.detail-modal.story-modal .story-image-count,.detail-modal.story-modal .success-story-overlay{display:none!important}
+.detail-modal.story-modal .modal-content{grid-column:2;grid-row:1;display:flex;min-width:0;min-height:0;height:100%;padding:20px 8px 0 0;overflow-y:auto;flex-direction:column;scrollbar-gutter:stable}
+.detail-modal.story-modal #modal-kicker{order:1;align-self:flex-start;margin:0 0 18px}
+.detail-modal.story-modal #modal-title{order:2;margin:0 0 22px;font-size:clamp(34px,3.4vw,48px);line-height:1}
+.detail-modal.story-modal #modal-details{order:3;width:100%;margin:0}
+.detail-modal.story-modal #modal-summary{order:4;margin:24px 0 20px;color:#4a5b73;font-size:1rem;line-height:1.55}
+.detail-modal.story-modal .modal-detail-grid div{display:grid;grid-template-columns:minmax(125px,34%) minmax(0,66%);gap:18px;align-items:center;min-height:56px;padding:12px 0;border:0;border-bottom:1px solid #dce3ee;border-radius:0;background:transparent}
+.detail-modal.story-modal .modal-detail-grid strong{margin:0;color:#647084;font-size:.74rem;line-height:1.55;letter-spacing:.06em;text-transform:uppercase}
+.detail-modal.story-modal .modal-detail-grid span{color:#18418f;font-size:.95rem;line-height:1.55}
+.detail-modal.story-modal .modal-detail-grid div:nth-child(3) span{color:#f45a23;font-weight:800}
+.detail-modal.story-modal .story-actions{order:5;display:grid;width:100%;grid-template-columns:1fr 1fr;gap:20px;margin-top:auto;padding-top:10px}
+.detail-modal.story-modal .story-actions .btn{display:flex!important;width:100%;height:54px;margin:0;align-items:center;justify-content:center;padding:0 18px}
+.detail-modal.story-modal .story-enroll{margin:0;color:#1e3a8a;background:#fff}
+.detail-modal.story-modal .story-modal-nav{display:none}
+
+@media(max-width:1024px){
+  .detail-modal.story-modal .modal-dialog{display:grid;width:min(92vw,820px);height:auto;max-height:92dvh;padding:24px;grid-template-columns:1fr;grid-template-rows:auto auto;gap:24px;overflow-y:auto}
+  .detail-modal.story-modal .modal-visual{grid-column:1;grid-row:1;height:min(54dvh,560px);padding:12px}
+  .detail-modal.story-modal .modal-content{grid-column:1;grid-row:2;height:auto;min-height:0;padding:4px 4px 0;overflow:visible;scrollbar-gutter:auto}
+}
+
+@media(max-width:620px){
+  .detail-modal.story-modal{padding:8px}
+  .detail-modal.story-modal .modal-dialog{width:100%;max-height:calc(100dvh - 16px);padding:16px;gap:18px;border-radius:22px}
+  .detail-modal.story-modal .modal-visual{height:min(48dvh,430px);min-height:250px;padding:8px;border-radius:18px}
+  .detail-modal.story-modal .story-poster,.detail-modal.story-modal .story-poster img{border-radius:16px}
+  .detail-modal.story-modal .modal-content{padding:2px 2px 0}
+  .detail-modal.story-modal #modal-kicker{margin-bottom:12px}
+  .detail-modal.story-modal #modal-title{margin-bottom:16px;font-size:34px}
+  .detail-modal.story-modal .modal-detail-grid div{grid-template-columns:minmax(100px,35%) minmax(0,65%);gap:12px;min-height:52px;padding:10px 0}
+  .detail-modal.story-modal .story-actions{grid-template-columns:1fr;gap:12px}
+}

@@ -444,7 +444,13 @@
     }
     modal.classList.remove('closing');
     modal.querySelector('.story-enroll')?.setAttribute('hidden','');
-    const primaryModalCta = modal.querySelector('.modal-content>.btn');
+    const existingStoryActions = modal.querySelector('.story-actions');
+    if (type !== 'story' && existingStoryActions) {
+      const primary = existingStoryActions.querySelector('.btn:not(.story-enroll)');
+      if (primary) existingStoryActions.before(primary);
+      existingStoryActions.remove();
+    }
+    const primaryModalCta = modal.querySelector('.modal-content .btn:not(.story-enroll)');
     if (primaryModalCta) primaryModalCta.textContent = 'Book Free Demo';
     if (type === 'tool') {
       activeToolIndex = Number(trigger.dataset.toolIndex);
@@ -470,15 +476,26 @@
       const role = trigger.dataset.role || 'Business Analyst';
       const result = trigger.dataset.package || 'Not published';
       const image = trigger.querySelector('img');
+      const publishedStory = {
+        Sapna: { company: 'Tech Mahindra / Simplify Healthcare', package: '6 LPA / 7.8 LPA', previous: 'IT-Education', current: 'IT' },
+        Mitali: { company: 'Iorta / Darekh', package: '5.5 LPA / 4 LPA', previous: 'IT', current: 'IT' }
+      }[title] || {};
+      const storyCompany = publishedStory.company || company;
+      const storyPackage = publishedStory.package || result;
+      const previousDomain = publishedStory.previous || 'See published success poster';
+      const currentDomain = publishedStory.current || 'Business Analysis / IT';
       document.querySelector('#modal-kicker').textContent = 'COEPD Success Story';
       document.querySelector('#modal-title').textContent = title;
-      document.querySelector('#modal-summary').textContent = `${title} progressed toward an analyst career through structured learning, business projects, mentor feedback, profile preparation and interview practice.`;
-      document.querySelector('#modal-visual').innerHTML = `<div class="story-poster"><img src="${image.src}" alt="${image.alt}" loading="eager"><span class="story-image-count">1 / 1</span></div>`;
-      document.querySelector('#modal-details').innerHTML = [['Current Company',company],['Current Role',role],['Salary Package',result],['Previous Domain','See published success poster'],['Current Domain','Business Analysis / IT'],['Career Journey',`Previous experience → ${role}`]].map(([label,value],row) => `<div style="--row:${row}"><strong>${label}</strong><span>${value}</span></div>`).join('');
-      const cta = modal.querySelector('.modal-content>.btn'); cta.textContent = 'Book Free Demo'; cta.style.display = '';
+      document.querySelector('#modal-summary').textContent = `Successfully placed as a ${role}.`;
+      document.querySelector('#modal-visual').innerHTML = `<div class="story-poster"><img src="${image.src}" alt="${image.alt}" loading="eager" decoding="async"></div>`;
+      document.querySelector('#modal-details').innerHTML = [['Current Company',storyCompany],['Current Role',role],['Salary Package',storyPackage],['Previous Domain',previousDomain],['Current Domain',currentDomain],['Career Journey',`${previousDomain} → ${currentDomain}`]].map(([label,value],row) => `<div style="--row:${row}"><strong>${label}</strong><span>${value}</span></div>`).join('');
+      const cta = primaryModalCta; cta.textContent = 'Book Free Demo'; cta.style.display = '';
       let enroll = modal.querySelector('.story-enroll');
       if (!enroll) { enroll = document.createElement('a'); enroll.className = 'btn btn-outline story-enroll'; enroll.href = demoUrl; enroll.target = '_blank'; enroll.rel = 'noopener noreferrer'; enroll.textContent = 'Enroll Now'; cta.after(enroll); }
       enroll.removeAttribute('hidden');
+      let actions = modal.querySelector('.story-actions');
+      if (!actions) { actions = document.createElement('div'); actions.className = 'story-actions'; cta.before(actions); }
+      actions.append(cta, enroll);
       let storyNav = modal.querySelector('.story-modal-nav');
       if (!storyNav) { storyNav = document.createElement('nav'); storyNav.className = 'story-modal-nav'; storyNav.setAttribute('aria-label','Browse success stories'); storyNav.innerHTML = '<button type="button" data-story-modal-prev>← Previous Student</button><span></span><button type="button" data-story-modal-next>Next Student →</button>'; modal.querySelector('.modal-content').appendChild(storyNav); }
       storyNav.querySelector('span').textContent = `${activeStoryIndex + 1} / ${storyCards.length}`;
